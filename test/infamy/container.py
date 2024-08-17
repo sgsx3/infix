@@ -1,4 +1,6 @@
 """Manage Infix containers"""
+import time
+
 
 class Container:
     """Helper methods"""
@@ -17,6 +19,12 @@ class Container:
                 return container
         return None
 
+    def _warn(self, msg):
+        """Print a warning message in yellow to stderr."""
+        GUL = "\033[93m"
+        RST = "\033[0m"
+        print(f"{GUL}warn - {msg}{RST}")
+
     def exists(self, name):
         """Check if container {name} runs on target."""
         container = self._find(name)
@@ -32,4 +40,14 @@ class Container:
         return False
 
     def action(self, name, act):
-        return self.system.call_action(f"/infix-containers:containers/container[name='{name}']/{act}")
+        """Call container action (context RPC), retry three times."""
+        xpath = f"/infix-containers:containers/container[name='{name}']/{act}"
+
+        for attempt in range(3):
+            try:
+                return self.system.call_action(xpath)
+            except Exception as e:
+                self._warn(f"failed {act} {name} ({attempt + 1}/3): {e}")
+                time.sleep(1)
+                if attempt == 2:
+                    raise
