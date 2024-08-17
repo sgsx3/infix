@@ -63,11 +63,22 @@ def json_get_yang_origin(addr):
 
 
 def getitem(data, key):
-    """Get sub-object from an object"""
-    while key:
-        data = data[key[0]]
-        key = key[1:]
+    """Get sub-object from an object safely."""
+    if data is None:
+        return None
 
+    for k in key:
+        try:
+            if isinstance(data, dict) or (isinstance(data, list) and
+                                          isinstance(k, int)):
+                data = data[k]
+            else:
+                logging.error(f"Key '{k}' not found in data "
+                              "or data is of unexpected type.")
+                return None
+        except (KeyError, IndexError, TypeError) as e:
+            logging.error(f"Error accessing key '{k}': {e}")
+            return None
     return data
 
 
@@ -122,7 +133,7 @@ def run_cmd(cmd, testfile):
         return output.splitlines()
     except subprocess.CalledProcessError as err:
         logger.error(f"{err}")
-        sys.exit(1)
+        return []
 
 
 def run_json_cmd(cmd, testfile):
@@ -142,7 +153,7 @@ def run_json_cmd(cmd, testfile):
     except json.JSONDecodeError as err:
         logger.error(f"failed parsing JSON output of command: {' '.join(cmd)}"
                      f", error: {err}")
-        sys.exit(1)
+        data = {}
     return data
 
 
@@ -467,11 +478,17 @@ def get_bridge_port_stp_state(ifname):
 
 
 def container_inspect(name, key):
-    """Call podman inspect {name}, return object at {path} or None"""
+    """Call podman inspect {name}, return object at {path} or None."""
     cmd = ['podman', 'inspect', name]
-    raw = run_json_cmd(cmd, "")
-
-    return getitem(raw[0], key)
+    try:
+        raw = run_json_cmd(cmd, "")
+        if not raw or not isinstance(raw, list) or not isinstance(raw[0], dict):
+            logging.error(f"Unexpected format from podman inspect: {raw}")
+            return None
+        return getitem(raw[0], key)
+    except Exception as e:
+        logging.error(f"Error running podman inspect: {e}")
+        return None
 
 
 def add_container(containers):
@@ -498,7 +515,7 @@ def add_container(containers):
         # The 'podman ps' command lists ports even in host mode, but
         # that's not applicable, so skip networks and port forwardings
         networks = container_inspect(container["name"], ("NetworkSettings", "Networks"))
-        if "host" in networks:
+        if networks and "host" in networks:
             container["network"] = {"host": True}
         else:
             container["network"] = {
