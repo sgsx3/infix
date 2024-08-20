@@ -1,0 +1,44 @@
+{
+    "ietf-keystore:keystore": {
+	"asymmetric-keys": {
+	    "asymmetric-key": [
+		{
+		    "name": "genkey",
+		    "public-key-format": "ietf-crypto-types:ssh-public-key-format",
+		    "public-key": "",
+		    "private-key-format": "ietf-crypto-types:rsa-private-key-format",
+		    "cleartext-private-key": "",
+		    "certificates": {}
+		}
+	    ]
+	}
+    },
+    "ietf-netconf-server:netconf-server": {
+	"listen": {
+	    "endpoints": {
+		"endpoint": [
+		    {
+			"name": "default-ssh",
+			"ssh": {
+			    "tcp-server-parameters": {
+				"local-address": "::"
+			    },
+			    "ssh-server-parameters": {
+				"server-identity": {
+				    "host-key": [
+					{
+					    "name": "default-key",
+					    "public-key": {
+						"central-keystore-reference": "genkey"
+					    }
+					}
+				    ]
+				}
+			    }
+			}
+		    }
+		]
+	    }
+	}
+    }
+}

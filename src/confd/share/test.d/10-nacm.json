@@ -1,0 +1,31 @@
+{
+    "ietf-netconf-acm:nacm": {
+	"groups": {
+	    "group": [
+		{
+		    "name": "admin",
+		    "user-name": [
+			"admin"
+		    ]
+		}
+	    ]
+	},
+	"rule-list": [
+	    {
+		"name": "admin-acl",
+		"group": [
+		    "admin"
+		],
+		"rule": [
+		    {
+			"name": "permit-all",
+			"module-name": "*",
+			"access-operations": "*",
+			"action": "permit",
+			"comment": "Allow 'admin' group complete access to all operations and data."
+		    }
+		]
+	    }
+	]
+    }
+}

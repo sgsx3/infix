@@ -53,6 +53,9 @@ The system has several datastores (or files):
    number of ports/interfaces.   This file is generated at boot.
  - `failure-config` is also generated at boot, from the same YANG models
    as `factory-config`, and holds the system *Fail Secure Mode*
+ - `test-config` is also generated at boot but only when the device is 
+   in the *Test Mode*. It holds the same configuration as 
+   `failure-config` (only different hostname). 
  - `startup-config` is created from `factory-config` at boot if it does
    not exist.  It is loaded as the system configuration on each boot.
  - `running-config` is what is actively running on the system.  If no
