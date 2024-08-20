@@ -90,8 +90,6 @@ console_error()
 
 factory()
 {
-    gen=$1
-
     # Fetch defaults, simplifies sort in collate()
     cp "$FACTORY_DEFAULTS_D"/* "$FACTORY_D/"
 
@@ -112,8 +110,6 @@ factory()
 
 failure()
 {
-    gen=$1
-
     # Fetch defaults, simplifies sort in collate()
     cp "$FAILURE_DEFAULTS_D"/* "$FAILURE_D"
 
@@ -141,8 +137,8 @@ test()
 
 # Both factory-config and failure-config are generated every boot
 # regardless if there is a static /etc/factory-config.cfg or not.
-factory "$FACTORY_GEN"
-failure "$FAILURE_GEN"
+factory 
+failure
 test
 
 if [ -n "$TESTING" ]; then
