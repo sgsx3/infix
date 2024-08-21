@@ -20,7 +20,9 @@ test:
 test-sh:
 	$(test-dir)/env $(mode) $(binaries) -i /bin/sh
 
+# Unit tests run with random (-r) hostname and container name to
+# prevent race conditions when running in CI environments.
 test-unit:
-	$(test-dir)/env $(ninepm) $(UNIT_TESTS)
+	$(test-dir)/env -r $(ninepm) $(UNIT_TESTS)
 
 .PHONY: test test-sh test-unit
