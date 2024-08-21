@@ -107,6 +107,14 @@ config DISK_IMAGE_BOOT_OFFSET
 	  to make sure that the GPT still fits at the start of the
 	  image.
 
+config DISK_IMAGE_TEST_MODE
+	bool "Enable Test Mode"
+	depends on DISK_IMAGE
+	default y
+	help
+	  Enable the test mode option by default. This will include
+	  test configurations or files needed for testing.
+
 config DISK_IMAGE_RELEASE_URL
 	string "Infix URL"
 	depends on DISK_IMAGE

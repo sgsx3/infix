@@ -59,8 +59,10 @@ if [ "$DISK_IMAGE" = "y" ]; then
 	tar -xa --strip-components=1 -C "$BINARIES_DIR" -f "$archive"
     fi
 
+    testmode=$([ "$DISK_IMAGE_TEST_MODE" = "y" ] && echo "y" || echo "n")
+
     $common/mkrauc-status.sh "$BINARIES_DIR/${NAME}.pkg" >"$BINARIES_DIR/rauc.status"
-    $common/mkdisk.sh -a $BR2_ARCH -n $diskimg -s $DISK_IMAGE_SIZE $bootcfg
+    $common/mkdisk.sh -a $BR2_ARCH -n $diskimg -t $testmode -s $DISK_IMAGE_SIZE $bootcfg
 fi
 
 load_cfg SDCARD_AUX
