@@ -1,9 +1,9 @@
 [submodule "buildroot"]
 	path = buildroot
-	url = ../buildroot.git
+	url = git@github.com:kernelkit/buildroot.git
 [submodule "9pm"]
 	path = test/9pm
-	url = ../9pm
+	url = git@github.com:kernelkit/9pm.git
 [submodule "qeneth"]
 	path = test/qeneth
-	url = ../qeneth.git
+	url = git@github.com:kernelkit/qeneth.git
