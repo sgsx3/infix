@@ -29,6 +29,12 @@ class PadSoftware:
     state = 10
     version = 23
 
+class PadDhcpServer:
+    iface = 7
+    ip = 17
+    mac = 19
+    host = 21
+    exp = 7
 
 class PadUsbPort:
     title = 30
@@ -160,6 +166,35 @@ class USBport:
         row = f"{self.name:<{PadUsbPort.name}}"
         row += f"{self.state:<{PadUsbPort.state}}"
         print(row)
+
+class DhcpServer:
+    def __init__(self, data):
+        self.data = data
+        self.iface = get_json_data('', self.data, 'if-name')
+        self.leases = []
+        now = datetime.now(timezone.utc)
+        for lease in get_json_data([], self.data, 'server', 'lease', 'host'):
+            dt = datetime.strptime(lease["expires"], "%Y-%m-%dT%H:%M:%S%z")
+            exp =  (dt - now).total_seconds()
+            self.leases.append({
+               "ip": lease["ip-address"],
+               "mac": lease["hardware-address"],
+               "host": lease["hostname"],
+               "exp": int(exp)
+            })
+
+    def print(self):
+        for lease in self.leases:
+            ip = lease["ip"]
+            mac = lease["mac"]
+            exp = "%ds" % lease["exp"]
+            host = lease["host"][:20]
+            row = f"{self.iface:<{PadDhcpServer.iface}}"
+            row += f"{ip:<{PadDhcpServer.ip}}"
+            row += f"{mac:<{PadDhcpServer.mac}}"
+            row += f"{host:<{PadDhcpServer.host}}"
+            row += f"{exp:<{PadDhcpServer.exp}}"
+            print(row)
 
 class Iface:
     def __init__(self, data):
@@ -585,6 +620,23 @@ def show_hardware(json):
             port = USBport(component)
             port.print()
 
+def show_dhcp_server(json):
+    if not json.get("infix-dhcp-server:dhcp-server"):
+       print(f"Error, top level \"infix-dhcp-server:dhcp-server\" missing")
+       sys.exit(1)
+
+    hdr = (f"{'IFACE':<{PadDhcpServer.iface}}"
+           f"{'IP':<{PadDhcpServer.ip}}"
+           f"{'MAC':<{PadDhcpServer.mac}}"
+           f"{'HOSTNAME':<{PadDhcpServer.host}}"
+           f"{'EXPIRES':<{PadDhcpServer.exp}}")
+    print(Decore.invert(hdr))
+
+    servers = get_json_data({}, json, "infix-dhcp-server:dhcp-server", "server-if")
+    for s in servers:
+        server = DhcpServer(s)
+        server.print()
+
 def main():
     try:
         json_data = json.load(sys.stdin)
@@ -610,6 +662,7 @@ def main():
     parser_show_software.add_argument('-n', '--name', help='Slotname')
 
     parser_show_routing_table = subparsers.add_parser('show-hardware', help='Show USB ports')
+    parser_show_routing_table = subparsers.add_parser('show-dhcp-server', help='Show DHCP server')
 
     args = parser.parse_args()
 
@@ -623,6 +676,8 @@ def main():
         show_bridge_mdb(json_data)
     elif args.command == "show-hardware":
         show_hardware(json_data)
+    elif args.command == "show-dhcp-server":
+        show_dhcp_server(json_data)
     else:
         print(f"Error, unknown command {args.command}")
         sys.exit(1)

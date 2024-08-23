@@ -41,6 +41,7 @@
 #define XPATH_HARDWARE_BASE "/ietf-hardware:hardware"
 #define XPATH_ROUTING_OSPF XPATH_ROUTING_BASE "/ospf"
 #define XPATH_CONTAIN_BASE  "/infix-containers:containers"
+#define XPATH_DHCP_SERVER_BASE  "/infix-dhcp-server:dhcp-server"
 
 TAILQ_HEAD(sub_head, sub);
 
@@ -395,6 +396,11 @@ static int sub_to_iface(struct statd *statd, const char *ifname)
 	return subscribe(statd, "ietf-interfaces", path, name, sr_ifaces_cb);
 }
 
+static int sub_to_dhcp_server(struct statd *statd)
+{
+	return subscribe(statd, "infix-dhcp-server", XPATH_DHCP_SERVER_BASE, "dhcp-server", sr_generic_cb);
+}
+
 static void unsub_to_all(struct statd *statd)
 {
 	struct sub *sub;
@@ -612,6 +618,13 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 #endif
+
+	err = sub_to_dhcp_server(&statd);
+	if (err) {
+		ERROR("Error registering infix-dhcp-server status");
+		sr_disconnect(sr_conn);
+		return EXIT_FAILURE;
+	}
 
 	ev_signal_init(&sigint_watcher, sigint_cb, SIGINT);
 	sigint_watcher.data = &statd;

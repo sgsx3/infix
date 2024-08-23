@@ -522,6 +522,63 @@ def add_container(containers):
         containers.append(container)
 
 
+def dhcp_server_lease_info(ifname):
+    hosts = []
+    with open("/var/run/dnsmasq-%s.leases" % ifname) as fd:
+        for line in fd:
+            tokens = line.strip().split(" ")
+            if len(tokens) != 5:
+                continue
+
+            host = {
+                "ip-address": tokens[2],
+                "hardware-address": tokens[1],
+            }
+            dt = datetime.utcfromtimestamp(int(tokens[0]))
+            host["expires"] = dt.isoformat() + "+00:00"
+
+            if tokens[3] != '*':
+                host["hostname"] = tokens[3]
+            if tokens[4] != '*':
+                host["client-identifier"] = tokens[4]
+
+            hosts.append(host)
+
+    return {
+        "host-count": len(hosts),
+        "host": hosts
+    }
+
+
+def add_dhcp_server_status(servers):
+    """Populate DHCP server status"""
+
+    raw = run_json_cmd(['/usr/libexec/statd/dhcp-server-status'], "")
+    for entry in raw:
+        metrics = entry["metrics"]
+
+        servers.append({
+            "if-name": entry["if-name"],
+            "packet-statistics": {
+                "sent": {
+                    "offer-count": metrics["dhcp_offer"],
+                    "ack-count": metrics["dhcp_ack"],
+                    "nak-count": metrics["dhcp_nak"]
+                },
+                "received": {
+                    "decline-count": metrics["dhcp_decline"],
+                    "discover-count": metrics["dhcp_discover"],
+                    "request-count": metrics["dhcp_request"],
+                    "release-count": metrics["dhcp_release"],
+                    "inform-count": metrics["dhcp_inform"]
+                }
+            },
+            "server": {
+                "lease": dhcp_server_lease_info(entry["if-name"])
+            }
+        })
+
+
 def get_brport_multicast(ifname):
     data = run_json_cmd(['mctl', 'show', 'igmp', 'json'], "bridge-mdb.json")
     multicast = {}
@@ -927,6 +984,14 @@ def main():
             }
         }
         add_container(yang_data['infix-containers:containers']['container'])
+
+    elif args.model == 'infix-dhcp-server':
+        yang_data = {
+            "infix-dhcp-server:dhcp-server": {
+                "server-if": []
+            }
+        }
+        add_dhcp_server_status(yang_data['infix-dhcp-server:dhcp-server']['server-if'])
 
     else:
         logger.warning(f"Unsupported model {args.model}", file=sys.stderr)

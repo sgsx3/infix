@@ -31,7 +31,8 @@ confd_plugin_la_SOURCES =			\
 	ietf-system.c				\
 	ietf-factory-default.c			\
 	ietf-routing.c				\
-	infix-dhcp.c				\
+	infix-dhcp-client.c				\
+	infix-dhcp-server.c				\
 	infix-factory.c				\
 	infix-meta.c				\
 	infix-services.c			\
